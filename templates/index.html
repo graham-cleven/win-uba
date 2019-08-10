@@ -13,8 +13,12 @@
   </div>
   <ul class="list-group list-group-flush">
 	  <li class="list-group-item">Username: {{ ses[0][2] }}</li>
-	  <li class="list-group-item">Target Computer: {{ ses[0][1] }}</li>
-    <li class="list-group-item">Session Duration: {{ ses[1][0] - ses[0][0]  }} sec</li>
+	  <li class="list-group-item">Target Computer:<br> {{ ses[0][1] }}</li>
+	  <li class="list-group-item">Session Start:<br> {{ ses[0][0] }}</li>
+	  <li class="list-group-item">Session End:<br> {{ ses[1][0] }}
+    	<li class="list-group-item">Elevated Token: {{ ses[0][6] }}  </li>
+	<li class="list-group-item">Logon ID: {{ ses[0][4] }}
+		<li class="list-group-item">Processes /session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }} </li>
   </ul>
 </div>
 <br><br>

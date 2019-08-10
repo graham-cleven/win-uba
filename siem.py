@@ -1,10 +1,29 @@
 from splunk import Splunk
+from datetime import datetime
 
 class Siem:
     def __init__(self):
-        # connect to our Splunk server
-        splunkServer = Splunk()
+        # connect to Splunk server
+        self.splunkServer = Splunk()
 
+    def getProcess(self, logonID, host, stime, etime):
+
+        """
+        function takes logonID (hex), host, start time, and end time
+        returns all processes pinned to that logon id at that that on that host
+        """
+
+        # setup query
+        query = "index=windows EventCode=4688 Logon_ID={} host={} \
+                earliest={} latest={} \
+                | table _indextime New_Process_Name" \
+                .format(logonID, host, stime, etime)
+
+        # execute query
+        processes = self.splunkServer.query(query)
+        return processes
+
+    def getSessions(self, user):
         # setup query
         """
         Event Codes:
@@ -18,15 +37,14 @@ class Siem:
         Logon_ID[0]/[1] - Subject Logon_ID (not used) / Logon_ID
         """
 
-        query = "index=windows earliest=-1y latest=+3years EventCode=4624 OR \
+        query = "index=windows {} earliest=-1y latest=+3years EventCode=4624 OR \
                     EventCode=4634 OR EventCode=4647 \
                     | table _indextime, Logon_Type, Account_Name \
-                    Logon_ID, Linked_Logon_ID, TaskCategory, host, RecordNumber"
+                    Logon_ID, Linked_Logon_ID, TaskCategory, host, \
+                    Elevated_Token".format(user)
 
         # execute query
-        self.logs = splunkServer.query(query) 
-
-    def funcName(self):    
+        self.logs = self.splunkServer.query(query) 
 
         # initial logon & logoff objects
         logonObjs = []
@@ -37,17 +55,20 @@ class Siem:
 
             if log['TaskCategory'] == 'Logon':
                 # extract & structure login data 
-                logObj = [int(log['_indextime']), log['host'],
-                        log['Account_Name'][-1], log['Logon_Type'],
-                        log['Logon_ID'][-1], log['Linked_Logon_ID']]
+                logObj = [datetime.fromtimestamp(float(log['_indextime'])),
+                        log['host'], log['Account_Name'][-1], 
+                        log['Logon_Type'], log['Logon_ID'][-1],
+                        log['Linked_Logon_ID'], log['Elevated_Token'],
+                        log['_indextime']]
 
                 # append login event to master login list
                 logonObjs.append(logObj)
 
             if log['TaskCategory'] == 'Logoff':
                 # extract logoff data
-                logObj = [int(log['_indextime']), log['Account_Name'],
-                        log['Logon_ID'], log['host']]
+                logObj = [datetime.fromtimestamp(float(log['_indextime'])),
+                        log['Account_Name'], log['Logon_ID'], 
+                        log['host'], log['_indextime']]
 
                 # append logoffs to master list
                 logoffObjs.append(logObj)
@@ -75,9 +96,7 @@ class Siem:
                         session = [logon, logoff]
                         sessions.append(session) 
 
-                    # split tokens will use Linked_Logon_ID
-                   # if logoff[2] == logon[5]:
-                    #    session = [logon, logoff]
-                     #   sessions.append(session)
+
+        self.sessions = sessions
 
         return sessions
