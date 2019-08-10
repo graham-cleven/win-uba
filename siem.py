@@ -1,80 +1,83 @@
 from splunk import Splunk
 
-# connect to our Splunk server
-splunkServer = Splunk()
+class Siem:
+    def __init__(self):
+        # connect to our Splunk server
+        splunkServer = Splunk()
 
-# setup query
-"""
-Event Codes:
-4624 - New login
-4634 - An account was logged off (non-interactive)
-4647 - User initiated logoff
+        # setup query
+        """
+        Event Codes:
+        4624 - New login
+        4634 - An account was logged off (non-interactive)
+        4647 - User initiated logoff
 
-Fields:
-TaskCategory - Logon or Logoff
-Account_Name[0]/[1] - Logon Server (not used yet) / username
-Logon_ID[0]/[1] - Subject Logon_ID (not used) / Logon_ID
-"""
+        Fields:
+        TaskCategory - Logon or Logoff
+        Account_Name[0]/[1] - Logon Server (not used yet) / username
+        Logon_ID[0]/[1] - Subject Logon_ID (not used) / Logon_ID
+        """
 
-query = "index=windows EventCode=4624 OR \
-            EventCode=4634 OR EventCode=4647 \
-            | table _indextime, Logon_Type, Account_Name \
-            Logon_ID, Linked_Logon_ID, TaskCategory, host"
+        query = "index=windows earliest=-1y latest=+3years EventCode=4624 OR \
+                    EventCode=4634 OR EventCode=4647 \
+                    | table _indextime, Logon_Type, Account_Name \
+                    Logon_ID, Linked_Logon_ID, TaskCategory, host, RecordNumber"
 
-# execute query
-logs = splunkServer.query(query) 
+        # execute query
+        self.logs = splunkServer.query(query) 
 
-# initial logon & logoff objects
-logonObjs = []
-logoffObjs = [] 
+    def funcName(self):    
 
-# create master list of logons and logoffs
-for log in logs:
-    if log['TaskCategory'] == 'Logon':
-        # extract & structure login data 
-        logObj = [log['_indextime'], log['host'],
-                log['Account_Name'][1], log['Logon_Type'],
-                log['Logon_ID'][1], log['Linked_Logon_ID']]
+        # initial logon & logoff objects
+        logonObjs = []
+        logoffObjs = [] 
 
-        # append login event to master login list
-        logonObjs.append(logObj)
+        # create master list of logons and logoffs
+        for log in self.logs:
 
-    if log['TaskCategory'] == 'Logoff':
-        # extract logoff data
-        logObj = [log['_indextime'], log['Account_Name'],
-                log['Logon_ID'], log['host']]
+            if log['TaskCategory'] == 'Logon':
+                # extract & structure login data 
+                logObj = [log['_indextime'], log['host'],
+                        log['Account_Name'][-1], log['Logon_Type'],
+                        log['Logon_ID'][-1], log['Linked_Logon_ID']]
 
-        # append logoffs to master list
-        logoffObjs.append(logObj)
+                # append login event to master login list
+                logonObjs.append(logObj)
 
-# merge logon and logoff lists to create sessions
-"""
-Logoff will terminate split token
-ex:
-['t', 'DESKTOP-IUAO9R7', 'usr', '2', '0x13F9908', '0x13F98E9']
-['t', 'DESKTOP-IUAO9R7', 'usr', '2', '0x13F98E9', '0x13F9908']
-['t', 'usr', '0x13F9908', 'DESKTOP-IUA09R7']
-"""
+            if log['TaskCategory'] == 'Logoff':
+                # extract logoff data
+                logObj = [log['_indextime'], log['Account_Name'],
+                        log['Logon_ID'], log['host']]
 
-# initialize sessions container
-sessions = []
+                # append logoffs to master list
+                logoffObjs.append(logObj)
 
-# merge logons with split tokens
-for logon in logonObjs:
-    for logonSplit in logonObjs:
-        if logon[4] == logonSplit[5]:
+        # merge logon and logoff lists to create sessions
+        """
+        Logoff will terminate split token
+        ex:
+        ['t', 'DESKTOP-IUAO9R7', 'usr', '2', '0x13F9908', '0x13F98E9']
+        ['t', 'DESKTOP-IUAO9R7', 'usr', '2', '0x13F98E9', '0x13F9908']
+        ['t', 'usr', '0x13F9908', 'DESKTOP-IUA09R7']
+        """
 
-            for ses in sessions:
-                if ses[0] == logonSplit and ses[1] == logon:
-                    break 
+        # initialize sessions container
+        sessions = []
 
-            # merge splits and add to set 
-            logonCombined = [logon, logonSplit]
-            sessions.append(logonCombined)
+        for logon in logonObjs:
+            for logoff in logoffObjs:
 
-# {'logon' : logon, 'logon-split' : logon-split, 'logoff' : logoff}
+                # check user & machine match
+                if logoff[3] == logon[1] and logoff[1] == logon[2]:
 
+                    # find corosponding logoff
+                    if logoff[2] == logon[4]:
+                        session = [logon, logoff]
+                        sessions.append(session) 
 
-for ses in sessions:
-    print(ses)
+                    # split tokens will use Linked_Logon_ID
+                   # if logoff[2] == logon[5]:
+                    #    session = [logon, logoff]
+                     #   sessions.append(session)
 
+        return sessions

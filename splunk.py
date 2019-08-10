@@ -22,19 +22,31 @@ class Splunk:
 
     def query(self, search):
         query = "search " + search 
-        kwargs_normalsearch = {"exec_mode": "normal"}
+        kwargs_normalsearch = {"exec_mode": "normal", "count": 0}
         job = self.service.jobs.create(query, **kwargs_normalsearch)
 
         while True:
             while not job.is_ready():
                 pass
+            
+            stats = {"isDone": job["isDone"],
+                "doneProgress": float(job["doneProgress"])*100,
+                "scanCount": int(job["scanCount"]),
+                "eventCount": int(job["eventCount"]),
+                "resultCount": int(job["resultCount"])}
 
-            if job["isDone"] == "1":
+            status = ("\r%(doneProgress)03.1f%%   %(scanCount)d scanned   "
+              "%(eventCount)d matched   %(resultCount)d results") % stats
+
+            # sys.stdout.write(status)
+            # sys.stdout.flush()
+            if stats["isDone"] == "1":
+                # sys.stdout.write("\n\nDone!\n\n")
                 break
-                # time.sleep(2)
-        
+                time.sleep(2)
+
         resp = []
-        for result in results.ResultsReader(job.results()):
+        for result in results.ResultsReader(job.results(count=0)):
             resp.append(result)
 
         return resp
