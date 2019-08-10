@@ -59,30 +59,21 @@ ex:
 # initialize sessions container
 sessions = []
 
-# for each logon, find corposponding logoff
+# merge logons with split tokens
 for logon in logonObjs:
-    for logoff in logoffObjs:
+    for logonSplit in logonObjs:
+        if logon[4] == logonSplit[5]:
 
-        # if Logon_ID in logon event matches Logon_ID in logoff event
-        # and machine matches
-        # if ((logon[4] == logoff[2] or logon[5] == logoff[2]) and logon[1] == logoff[3]):
+            for ses in sessions:
+                if ses[0] == logonSplit and ses[1] == logon:
+                    break 
 
-        # machine matches
-        if logon[1] == logoff[3]:
+            # merge splits and add to set 
+            logonCombined = [logon, logonSplit]
+            sessions.append(logonCombined)
 
-            # find corposponding logoff and logon
-            if logon[4] == logoff[2]:
-                targetLogoff = logoff[2]
-                targetLogon = logon[4]
+# {'logon' : logon, 'logon-split' : logon-split, 'logoff' : logoff}
 
-            # find corposponding split logon
-            targetSplitLogon = 
-
-    # merge events into sessions
-    ses = {'logon' : logon, 'logoff' : logoff}
-
-    # attach to master sessions list
-    sessions.append(ses)
 
 for ses in sessions:
     print(ses)
