@@ -37,7 +37,7 @@ class Siem:
 
             if log['TaskCategory'] == 'Logon':
                 # extract & structure login data 
-                logObj = [log['_indextime'], log['host'],
+                logObj = [int(log['_indextime']), log['host'],
                         log['Account_Name'][-1], log['Logon_Type'],
                         log['Logon_ID'][-1], log['Linked_Logon_ID']]
 
@@ -46,7 +46,7 @@ class Siem:
 
             if log['TaskCategory'] == 'Logoff':
                 # extract logoff data
-                logObj = [log['_indextime'], log['Account_Name'],
+                logObj = [int(log['_indextime']), log['Account_Name'],
                         log['Logon_ID'], log['host']]
 
                 # append logoffs to master list
