@@ -16,12 +16,36 @@ class Siem:
         # setup query
         query = "index=windows EventCode=4688 Logon_ID={} host={} \
                 earliest={} latest={} \
-                | table _indextime New_Process_Name" \
+                | table _indextime Creator_Process_Name, New_Process_Name" \
                 .format(logonID, host, stime, etime)
 
         # execute query
         processes = self.splunkServer.query(query)
-        return processes
+        
+        procTree = []
+        # procTree.update(children = ["test", "test2"])
+
+        # extract set of parrent processes
+        parents = set() 
+        for proc in processes:
+            parents.add(proc['Creator_Process_Name'])
+
+        # attach children
+        for parent in parents:
+            branch = {"parent" : parent, "children" : []}
+
+            # find kids and add to list after parrent
+            children = []
+            for proc in processes:
+                if parent == proc['Creator_Process_Name']:
+                    children.append(proc['New_Process_Name'])
+
+            branch.update( children=children)
+
+            # attach branch to tree
+            procTree.append(branch)
+
+        return procTree
 
     def getSessions(self, user):
         # setup query
@@ -55,7 +79,8 @@ class Siem:
 
             if log['TaskCategory'] == 'Logon':
                 # extract & structure login data 
-                logObj = [datetime.fromtimestamp(float(log['_indextime'])),
+                logObj = [datetime.fromtimestamp(float(log['_indextime'])) \
+                        .strftime("%d %b %y %H:%M:%S"), \
                         log['host'], log['Account_Name'][-1], 
                         log['Logon_Type'], log['Logon_ID'][-1],
                         log['Linked_Logon_ID'], log['Elevated_Token'],
@@ -66,7 +91,8 @@ class Siem:
 
             if log['TaskCategory'] == 'Logoff':
                 # extract logoff data
-                logObj = [datetime.fromtimestamp(float(log['_indextime'])),
+                logObj = [datetime.fromtimestamp(float(log['_indextime'])) \
+                        .strftime("%d %b %y %H:%M:%S"), \
                         log['Account_Name'], log['Logon_ID'], 
                         log['host'], log['_indextime']]
 
@@ -100,3 +126,6 @@ class Siem:
         self.sessions = sessions
 
         return sessions
+
+
+Siem().getProcess("0xB12A9", "DESKTOP-IUAO9R7", "1565479428", "1565479495")

@@ -12,8 +12,7 @@ def index(username):
 @app.route('/session/<logonID>/<host>/<stime>/<etime>')
 def session(logonID, host, stime, etime):
     processes = Siem().getProcess(logonID, host, stime, etime)
-    return str(processes)
-    
+    return render_template('processes.html', procs=processes) 
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)

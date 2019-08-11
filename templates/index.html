@@ -1,10 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<style>
+
+.tracking-detail {
+ padding:3rem 0
+}
+#tracking {
+ margin-bottom:1rem
+}
+[class*=tracking-status-] p {
+ margin:0;
+ font-size:1.1rem;
+ color:#fff;
+ text-transform:uppercase;
+ text-align:center
+}
+[class*=tracking-status-] {
+ padding:1.6rem 0
+}
+.tracking-status-intransit {
+ background-color:#65aee0
+}
+.tracking-status-outfordelivery {
+ background-color:#f5a551
+}
+.tracking-status-deliveryoffice {
+ background-color:#f7dc6f
+}
+.tracking-status-delivered {
+ background-color:#4cbb87
+}
+.tracking-status-attemptfail {
+ background-color:#b789c7
+}
+.tracking-status-error,.tracking-status-exception {
+ background-color:#d26759
+}
+.tracking-status-expired {
+ background-color:#616e7d
+}
+.tracking-status-pending {
+ background-color:#ccc
+}
+.tracking-status-inforeceived {
+ background-color:#214977
+}
+.tracking-list {
+ border:1px solid #e5e5e5
+}
+.tracking-item {
+ border-left:1px solid #e5e5e5;
+ position:relative;
+ padding:2rem 1.5rem .5rem 2.5rem;
+ font-size:.9rem;
+ margin-left:3rem;
+ min-height:5rem
+}
+.tracking-item:last-child {
+ padding-bottom:4rem
+}
+.tracking-item .tracking-date {
+ margin-bottom:.5rem
+}
+.tracking-item .tracking-date span {
+ color:#888;
+ font-size:85%;
+ padding-left:.4rem
+}
+.tracking-item .tracking-content {
+ padding:.5rem .8rem;
+ background-color:#f4f4f4;
+ border-radius:.5rem
+}
+.tracking-item .tracking-content span {
+ display:block;
+ color:#888;
+ font-size:85%
+}
+.tracking-item .tracking-icon {
+ line-height:2.6rem;
+ position:absolute;
+ left:-1.3rem;
+ width:2.6rem;
+ height:2.6rem;
+ text-align:center;
+ border-radius:50%;
+ font-size:1.1rem;
+ background-color:#fff;
+ color:#fff
+}
+.tracking-item .tracking-icon.status-sponsored {
+ background-color:#f68
+}
+.tracking-item .tracking-icon.status-delivered {
+ background-color:#4cbb87
+}
+.tracking-item .tracking-icon.status-outfordelivery {
+ background-color:#f5a551
+}
+.tracking-item .tracking-icon.status-deliveryoffice {
+ background-color:#f7dc6f
+}
+.tracking-item .tracking-icon.status-attemptfail {
+ background-color:#b789c7
+}
+.tracking-item .tracking-icon.status-exception {
+ background-color:#d26759
+}
+.tracking-item .tracking-icon.status-inforeceived {
+ background-color:#214977
+}
+.tracking-item .tracking-icon.status-intransit {
+ color:#e5e5e5;
+ border:1px solid #e5e5e5;
+ font-size:.6rem
+}
+@media(min-width:992px) {
+ .tracking-item {
+  margin-left:10rem
+ }
+ .tracking-item .tracking-date {
+  position:absolute;
+  left:-10rem;
+  width:7.5rem;
+  text-align:right
+ }
+ .tracking-item .tracking-date span {
+  display:block
+ }
+ .tracking-item .tracking-content {
+  padding:0;
+  background-color:transparent
+ }
+}
+
+</style>
     <title>Sessions</title>
 </head>
 <body>
+
+
+
+<div class="container">
+    <h2>Windows Session Tracker</h2>
+   <div class="row">
+      
+      <div class="col-md-12 col-lg-12">
+         <div id="tracking-pre"></div>
+         <div id="tracking">
+            <div class="text-center tracking-status-intransit">
+               <p class="tracking-status text-tight">Sessions</p>
+            </div>
+            <div class="tracking-list">
+
+
+                
+		    {% for ses in data %}
+
+                    <div class="tracking-item">
+			    <a href="/session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}"><div class="tracking-icon status-intransit">
+				    <!-- svg -->
+				    </div></a>
+			    <div class="tracking-date">{{ ses[0][0] }}
+				    <span>{{ ses[1][0] }}</span></div>
+			    <div class="tracking-content">User: {{ ses[0][2] }} <br> Target: {{ ses[0][1] }}<span>Logon: {{ ses[0][4] }} <br> Elevated: {{ ses[0][6] }} <br> Type: {% if ses[0][3] == "2" %}Interactive {% endif %}{% if ses[0][3] == "10" %}Remote Interactive {% endif %}{% if ses[0][3] == "8" %}Cleartext{% endif %} {{ ses[0][3] }}</span></div>
+                         </div>
+
+			 {% endfor %}      
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+
+
+<!--
     {% for ses in data %}
 
     <div class="card" style="width: 18rem;">
@@ -18,12 +194,13 @@
 	  <li class="list-group-item">Session End:<br> {{ ses[1][0] }}
     	<li class="list-group-item">Elevated Token: {{ ses[0][6] }}  </li>
 	<li class="list-group-item">Logon ID: {{ ses[0][4] }}
-		<li class="list-group-item">Processes /session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }} </li>
+		<li class="list-group-item"><a href="/session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}">Processes</a></li>
   </ul>
 </div>
 <br><br>
 
     {% endfor %}
+-->
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

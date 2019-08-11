@@ -1,0 +1,60 @@
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title></title>
+        <!-- stylesheets -->
+        <link rel="stylesheet" href="http://splunk.cleven-atl.ga/tree/Treant.css" type="text/css"/>
+    </head>
+    <body>
+
+	    <ul>
+	    {% for proc in procs %}
+	    <li>{{ proc.parent }}</li>
+	    <br>
+	    <ul>
+	    {% for child in proc.children %}
+	    <li>{{ child }}</li>
+	    {% endfor %}<br>
+	    </ul>
+	    {% endfor %}
+	    </ul>
+
+<div id="tree-simple" style="width:535px; height: 860px"> </div>
+
+
+        <!-- javascript -->
+        <script src="http://splunk.cleven-atl.ga/tree/vendor/raphael.js"></script>
+        <script src="http://splunk.cleven-atl.ga/tree/Treant.js"></script>
+
+	<script>
+
+		/*
+	simple_chart_config = {
+    	chart: {
+        	container: "#tree-simple"
+    	},
+
+    	nodeStructure: {
+		text: { name: "Host" },
+		children: [
+			{% for proc in procs %}
+		    {	
+			    text: { name: "{{ proc[0] }}" },
+			    children: [ 
+				    {% for child in proc %}
+				    { text: { name: "{{ child }}" }  },
+				    {% endfor %}
+			    ],
+				
+		    },
+			{% endfor %}
+		],
+	    }
+	};
+
+	var chart = new Treant(simple_chart_config);
+*/
+	</script>
+    </body>
+    </html>
