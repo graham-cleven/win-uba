@@ -8,7 +8,6 @@ class Siem:
         self.splunkServer = Splunk()
     
     def getNet(self, hostname, stime, etime):
-        
         """
         Function corrorlates network activity to 
         logon session by host & time
@@ -27,12 +26,17 @@ class Siem:
         # setup query against network data
         query = "index=bro dest_ip={} sourcetype=bro_ssh \
                 earliest={} latest={} \
-                | table  _time, src_ip".format(IP, time[0], time[1]) 
+                | table  _indextime, src_ip".format(IP, time[0], time[1]) 
         net = self.splunkServer.query(query)
-        return(str(net))
+
+        # process time stamps
+        for n in net:
+            n['_indextime'] = datetime.fromtimestamp(float(n['_indextime'])) \
+                    .strftime("%d %b %y %H:%M:%S")
+
+        return(net)
 
     def getProcess(self, logonID, host, stime, etime):
-
         """
         function takes logonID (hex), host, start time, and end time
         returns all processes pinned to that logon id at that time
@@ -44,12 +48,25 @@ class Siem:
         # setup query
         query = "index=windows EventCode=4688 Logon_ID={} host={} \
                 earliest={} latest={} \
-                | table _indextime Creator_Process_Name, New_Process_Name" \
+                | table _indextime Creator_Process_Name, New_Process_Name \
+                Creator_Process_ID, New_Process_ID" \
                 .format(logonID, host, time[0], time[1])
-
-        # execute query
         processes = self.splunkServer.query(query)
+
+        # procTree = [ {'parent' : {'_indextime' : '1234', 'name' : 'Name'}, 'children' : [{'_indextime' : '1234', 'name' : 'child'}]} ]
+
+        # isolate parents
+        parents = set()
+
+        for proc in processes:
+            parent = {proc['Creator_Process_ID']} 
+
+            parents.add(proc['Creator_Process_ID'])
+
+        return parents
         
+
+        """
         procTree = []
         # procTree.update(children = ["test", "test2"])
 
@@ -72,11 +89,11 @@ class Siem:
 
             # attach branch to tree
             procTree.append(branch)
+        """
 
         return procTree
 
-    def getSessions(self, user):
-        # setup query
+    def getSessions(self, user, stime, etime):
         """
         Event Codes:
         4624 - New login
@@ -88,14 +105,13 @@ class Siem:
         Account_Name[0]/[1] - Logon Server (not used yet) / username
         Logon_ID[0]/[1] - Subject Logon_ID (not used) / Logon_ID
         """
-
-        query = "index=windows {} earliest=-1y latest=+3years EventCode=4624 OR \
+        
+        # setup query
+        query = "index=windows {} earliest={} latest={} EventCode=4624 OR \
                     EventCode=4634 OR EventCode=4647 \
                     | table _indextime, Logon_Type, Account_Name \
                     Logon_ID, Linked_Logon_ID, TaskCategory, host, \
-                    Elevated_Token".format(user)
-
-        # execute query
+                    Elevated_Token".format(user, stime, etime)
         self.logs = self.splunkServer.query(query) 
 
         # initial logon & logoff objects

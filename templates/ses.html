@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/af.js" integrity="sha256-I5ZXO8KcMnqNkrXU7baGig70nATYjNDnxxA2d40PcR8=" crossorigin="anonymous"></script>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="http://lab.cleven-atl.ga/css/tracker-style.css" >
+
+    <title>Sessions</title>
+</head>
+<body>
+
+
+
+<div class="container">
+    <h2>Session Tracker</h2>
+
+
+
+
+
+   <div class="row">
+      
+      <div class="col-md-12 col-lg-12">
+         <div id="tracking-pre"></div>
+         <div id="tracking">
+            <div class="text-center tracking-status-intransit">
+               <p class="tracking-status text-tight">Sessions</p>
+            </div>
+            <div class="tracking-list">
+
+		    {% for ses in data %}
+
+                    <div class="tracking-item">
+			    <a href="/procs/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}"><div class="tracking-icon status-intransit"><!-- svg --></div></a>
+			    <div class="tracking-date">{{ ses[0][0] }}
+				    <span>{{ ses[1][0] }}</span></div>
+			    <div class="tracking-content">User: {{ ses[0][2] }} <br> Target: {{ ses[0][1] }}<span>Logon: {{ ses[0][4] }} <br> Elevated: {{ ses[0][6] }} <br> Type: {% if ses[0][3] == "2" %}Interactive {% endif %}{% if ses[0][3] == "10" %}Remote Interactive {% endif %}{% if ses[0][3] == "8" %}Cleartext{% endif %} {{ ses[0][3] }}</span></div>
+			    <div class="tracking-content"> <a href="/net/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}" >Network</a></div>
+                         </div>
+
+			 {% endfor %}      
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+
+
+<!--
+    {% for ses in data %}
+
+    <div class="card" style="width: 18rem;">
+  <div class="card-header">
+	 New Session
+  </div>
+  <ul class="list-group list-group-flush">
+	  <li class="list-group-item">Username: {{ ses[0][2] }}</li>
+	  <li class="list-group-item">Target Computer:<br> {{ ses[0][1] }}</li>
+	  <li class="list-group-item">Session Start:<br> {{ ses[0][0] }}</li>
+	  <li class="list-group-item">Session End:<br> {{ ses[1][0] }}
+    	<li class="list-group-item">Elevated Token: {{ ses[0][6] }}  </li>
+	<li class="list-group-item">Logon ID: {{ ses[0][4] }}
+		<li class="list-group-item"><a href="/session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}">Processes</a></li>
+  </ul>
+</div>
+<br><br>
+
+    {% endfor %}
+-->
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+
+</body>
+</html>
+
