@@ -158,17 +158,14 @@
             </div>
             <div class="tracking-list">
 
-
-                
 		    {% for ses in data %}
 
                     <div class="tracking-item">
-			    <a href="/session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}"><div class="tracking-icon status-intransit">
-				    <!-- svg -->
-				    </div></a>
+			    <a href="/session/{{ ses[0][4] }}/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}"><div class="tracking-icon status-intransit"><!-- svg --></div></a>
 			    <div class="tracking-date">{{ ses[0][0] }}
 				    <span>{{ ses[1][0] }}</span></div>
 			    <div class="tracking-content">User: {{ ses[0][2] }} <br> Target: {{ ses[0][1] }}<span>Logon: {{ ses[0][4] }} <br> Elevated: {{ ses[0][6] }} <br> Type: {% if ses[0][3] == "2" %}Interactive {% endif %}{% if ses[0][3] == "10" %}Remote Interactive {% endif %}{% if ses[0][3] == "8" %}Cleartext{% endif %} {{ ses[0][3] }}</span></div>
+			    <div class="tracking-content"> <a href="/net/{{ ses[0][1] }}/{{ ses[0][7] }}/{{ ses[1][4] }}" >Network</a></div>
                          </div>
 
 			 {% endfor %}      

@@ -1,23 +1,51 @@
 from splunk import Splunk
 from datetime import datetime
+import utils
 
 class Siem:
     def __init__(self):
         # connect to Splunk server
         self.splunkServer = Splunk()
+    
+    def getNet(self, hostname, stime, etime):
+        
+        """
+        Function corrorlates network activity to 
+        logon session by host & time
+        """
+
+        # setup query for DHCP correlation
+        query = "index=bro sourcetype=dhcp hostname={} | head 1 \
+                | table IP".format(hostname)
+
+        # execute query / grab IP addr
+        IP = self.splunkServer.query(query)[0]['IP']
+
+        # fuzz time
+        time = utils.fuzzTime(stime, etime, 20)
+
+        # setup query against network data
+        query = "index=bro dest_ip={} sourcetype=bro_ssh \
+                earliest={} latest={} \
+                | table  _time, src_ip".format(IP, time[0], time[1]) 
+        net = self.splunkServer.query(query)
+        return(str(net))
 
     def getProcess(self, logonID, host, stime, etime):
 
         """
         function takes logonID (hex), host, start time, and end time
-        returns all processes pinned to that logon id at that that on that host
+        returns all processes pinned to that logon id at that time
         """
+        
+        # fuzz time 
+        time = utils.fuzzTime(stime, etime, 10)
 
         # setup query
         query = "index=windows EventCode=4688 Logon_ID={} host={} \
                 earliest={} latest={} \
                 | table _indextime Creator_Process_Name, New_Process_Name" \
-                .format(logonID, host, stime, etime)
+                .format(logonID, host, time[0], time[1])
 
         # execute query
         processes = self.splunkServer.query(query)
@@ -34,7 +62,7 @@ class Siem:
         for parent in parents:
             branch = {"parent" : parent, "children" : []}
 
-            # find kids and add to list after parrent
+            # find kids and add to list after parent
             children = []
             for proc in processes:
                 if parent == proc['Creator_Process_Name']:
@@ -128,4 +156,4 @@ class Siem:
         return sessions
 
 
-Siem().getProcess("0xB12A9", "DESKTOP-IUAO9R7", "1565479428", "1565479495")
+# Siem().getProcess("0xB12A9", "DESKTOP-IUAO9R7", "1565479428", "1565479495")
