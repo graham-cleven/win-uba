@@ -15,25 +15,26 @@
 _____________________________________________________________________________________
 
 
-
 <ul>
 	{% for proc in procs %}
-	
-	<li> {{ proc.parent.name }} </li>
+		<li> {{ proc.parent.name }} </li>
 
-	{% for child in proc.children %}
+		{% for child in proc.children %}
+			<ul>{{ child.name }} 
 
-	<ul>{{ child.name }} 
+			{% for grandchild in child.children %}
+				<ul>{{ grandchild.name }} 
 
-	{% for grandchild in child.children %}
-		<ul>{{ grandchild.name }} </ul>
-
-	{% endfor %}
-	</ul>
-	{% endfor %}
+				{% for ggc in grandchild.children %}
+					<ul> {{ ggc.name }} </ul>
+				
+				{% endfor %} </ul>
+			{% endfor %}</ul>
+		{% endfor %}
 	{% endfor %}
 
 </ul>
+
 
 <!--
 	    <ul>

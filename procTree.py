@@ -1,4 +1,5 @@
 from splunk import Splunk
+from anytree import Node, RenderTree
 
 splunkServer = Splunk()
 
@@ -13,25 +14,44 @@ query = "index=windows EventCode=4688 Logon_ID={} host={} \
         .format(logonID, host, time[0], time[1])
 procs = splunkServer.query(query)
 
+# get list of PIDs
+pids = []
+for proc in procs:
+    pids.append(proc['New_Process_ID'])
+
+for pid in pids:
+    parent = Node(pid)
+
+    for proc in procs:
+        if proc['Creator_Process_ID'] == pid:
+            Node(proc['New_Process_ID'], parent=parent)
+
+    for pre, fill, node in RenderTree(parent):
+        print("%s%s" % (pre, node.name))
+
+"""
 #tree = [[{'layer' : 0, 'name' : 'name', 'time' : 1 }, {'layer' : 1...}]]
 
-# verify that process is at bottom of tree
-children = []
+# verify that process is parent 
+parents = []
 for proc in procs:
-    def findChild():
+    def findParent():
         for pproc in procs:
-            if proc['New_Process_ID'] == pproc['Creator_Process_ID']:
+            if proc['Creator_Process_ID'] == pproc['New_Process_ID']:
                 return 
-        child = {'layer' : 0, 'name' : proc['New_Process_Name'],\
-                'time' : proc['_indextime']}
-        children.append(child)
 
-    findChild()
+            # start new parent branch
+            parent = {'parent' : {'name' : proc['New_Process_Name']}, 'children' : []}
+            
+            # attach children
+            for ppproc in procs:
+                if ppproc['Creator_Process_ID'] == proc['New_Process_ID']:
+                    child = {'name' : ppproc['New_Process_Name']}
+                    parent['children'].append(child)
 
-# recursively find parents
-for child in children:
-    def findParents():
-        for proc in procs:
-            if 
+        parents.append(parent)
 
-# if parent is already in a branch 
+    findParent()
+
+print(parents)
+"""

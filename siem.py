@@ -53,8 +53,9 @@ class Siem:
                 .format(logonID, host, time[0], time[1])
         processes = self.splunkServer.query(query)
 
-        # tree = [{'parent': {'name' : 'cmd.exe', 'time' : 1 }, 'children' : [{'name' : 'conhost.exe'}, {'name' : 'tasklist.exe'}}]]
-        tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}]}, {'name' : 'tasklist.exe'}] }]
+        tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}, {'name' : 'conhostchild2.exe', 'children' : [{'name' : 'conhostchild2child.exe'}]}]}, {'name' : 'tasklist.exe'}] }]
+
+
 
         return tree
 
