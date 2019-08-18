@@ -53,18 +53,72 @@ class Siem:
                 .format(logonID, host, time[0], time[1])
         processes = self.splunkServer.query(query)
 
-        # procTree = [ {'parent' : {'_indextime' : '1234', 'name' : 'Name'}, 'children' : [{'_indextime' : '1234', 'name' : 'child'}]} ]
+        # tree = [{'parent': {'name' : 'cmd.exe', 'time' : 1 }, 'children' : [{'name' : 'conhost.exe'}, {'name' : 'tasklist.exe'}}]]
+        tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}]}, {'name' : 'tasklist.exe'}] }]
+
+        return tree
+
+        tree = []
+        for proc in processes:
+            branch = []
+            # start with newest process
+            leaf = {'layer' : 0, 'name' : proc['New_Process_Name'], \
+                    'parent' : proc['Creator_Process_ID'], 'time' : proc['_indextime']}
+            branch.append(leaf)
+
+            # search for parents - recursive
+            for process in processes:
+
+                if leaf['parent'] == process['New_Process_ID']:
+
+                    # update parent layer
+                    layer = leaf['layer'] + 1
+
+                    # create new leaf when parent is found
+                    leaf = {'layer' : layer, 'name' : process['New_Process_Name'], \
+                            'parent' : proc['Creator_Process_ID'], \
+                            'time' : proc['_indextime']} 
+                    branch.append(leaf)
+
+            tree.append(branch)
+
+        return tree[0]
+
+        """
+        # procTree = [ {'parent' : {'time' : '1234', 'name' : 'Name'}, 'children' : [{'time' : '1234', 'name' : 'child'}]} ]
+        
+        procTree = []
 
         # isolate parents
-        parents = set()
-
+        parents = [] 
         for proc in processes:
-            parent = {proc['Creator_Process_ID']} 
+            parent = {}
+            parent.update(name=proc['Creator_Process_ID'], time=proc['_indextime']) 
 
-            parents.add(proc['Creator_Process_ID'])
+            # add parent dict to parents list, removing redundent records
+            if not parent in parents:
+                parents.append(parent)
 
-        return parents
+        # for each parent, grab associated children
+        for par in parents:
+            branch = {'parent' : par, 'children' : []}
         
+            for proc in processes:
+                child = {'time' : '', 'name': ''}
+                branch['children'].append(child)
+
+            procTree.append(branch)
+
+        return procTree
+
+            #for proc in processes:
+             #   child = {}
+              #  if proc['Creator_Process_ID'] == par['name']:
+               #     child.update(name=proc['New_Process_Name'])
+                #    procTree.append(child)
+    
+        return procTree
+        """
 
         """
         procTree = []
@@ -172,4 +226,4 @@ class Siem:
         return sessions
 
 
-# Siem().getProcess("0xB12A9", "DESKTOP-IUAO9R7", "1565479428", "1565479495")
+# print(Siem().getProcess("0xB12A9", "DESKTOP-IUAO9R7", "1565479428", "1565479495"))

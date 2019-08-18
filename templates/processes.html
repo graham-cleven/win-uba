@@ -12,9 +12,30 @@
 
 	    {{ procs }} 
 	    <br><br><br>
-	    Testing<br> 
 _____________________________________________________________________________________
 
+
+
+<ul>
+	{% for proc in procs %}
+	
+	<li> {{ proc.parent.name }} </li>
+
+	{% for child in proc.children %}
+
+	<ul>{{ child.name }} 
+
+	{% for grandchild in child.children %}
+		<ul>{{ grandchild.name }} </ul>
+
+	{% endfor %}
+	</ul>
+	{% endfor %}
+	{% endfor %}
+
+</ul>
+
+<!--
 	    <ul>
 	    {% for proc in procs %}
 	    <li>{{ proc.parent }}</li>
@@ -22,10 +43,14 @@ ________________________________________________________________________________
 	    <ul>
 	    {% for child in proc.children %}
 	    <li>{{ child }}</li>
+	    {% for grandchild in child %}
+	    <li>{{ grandchild.children }}</li>
+	    {% endfor %}
 	    {% endfor %}<br>
 	    </ul>
 	    {% endfor %}
 	    </ul>
+-->
 
 <div id="tree-simple" style="width:535px; height: 860px"> </div>
 
