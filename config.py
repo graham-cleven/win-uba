@@ -2,15 +2,21 @@ config = {
 
         # offsets to correct for ingestion latency
         'host-lat' : 10,
-        'net-lat' :  30,
+        'net-lat' :  20,
 
         # Splunk options
-        'splunk-pwd' : '1234',
-        'splunk-host' : 'localhost'
-        'splunk-port' : '1234'
-        'network-index' : 'bro',
+        'splunk-pwd' : 'b3ZlclRoZU1vb24uNjY2',
+        'splunk-host' : 'localhost',
+        'splunk-user' : 'root',
+        'splunk-port' : '8089',
+
+        # index / sourcetype options
+        'net-index' : 'bro',
         'host-index' : 'windows',
-        'dhcp-type' : 'dhcp'
+        'dhcp-type' : 'dhcp',
+
+        # field settings
+        'field-event' : 'EventCode',
 
     }
 

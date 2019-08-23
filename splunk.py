@@ -3,14 +3,15 @@ import base64
 import time
 import splunklib.results as results
 import splunklib.client as client
+from config import config
 
 class Splunk:
     def __init__(self): 
 
-        HOST = "localhost"
-        PORT = 8089
-        USERNAME = "root" 
-        PASSWORD = base64.b64decode("b3ZlclRoZU1vb24uNjY2")
+        HOST = config['splunk-host']
+        PORT = config['splunk-port']
+        USERNAME = config['splunk-user'] 
+        PASSWORD = base64.b64decode(config['splunk-pwd'])
 
         service = client.connect(
                 host=HOST,

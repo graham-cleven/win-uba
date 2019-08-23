@@ -1,6 +1,7 @@
 from splunk import Splunk
 from datetime import datetime
 import utils
+from config import config as cf
 
 class Siem:
     def __init__(self):
@@ -15,24 +16,25 @@ class Siem:
         net = {}
 
         # query for DHCP correlation
-        query = "index=bro sourcetype=dhcp hostname={} | head 1 \
-                | table IP".format(hostname)
+        query = "index={} sourcetype={} hostname={} | head 1 \
+                | table IP".format(cf['net-index'], cf['dhcp-type'], hostname)
         IP = self.splunkServer.query(query)[0]['IP']
 
         # fuzz time
-        time = utils.fuzzTime(stime, etime, 20)
+        time = utils.fuzzTime(stime, etime, cf['net-lat'])
 
         # inbound SSH
-        query = "index=bro dest_ip={} sourcetype=bro_ssh \
+        query = "index={} dest_ip={} sourcetype=bro_ssh \
                 earliest={} latest={} | sort 0 _time \
-                | table  _indextime, src_ip".format(IP, time[0], time[1]) 
+                | table  _indextime, src_ip"\
+                .format(cf['net-index'], IP, time[0], time[1]) 
         ssh = utils.makeEpoch(self.splunkServer.query(query))
 
         # outgoing http
-        query = "index=bro src_ip={} sourcetype=bro_http \
+        query = "index={} src_ip={} sourcetype=bro_http \
                 earliest={} latest={} | sort 0 _time \
                 | table _indextime, dest_ip, dest_host" \
-                .format(IP, time[0], time[1])
+                .format(cf['net-index'], IP, time[0], time[1])
         http = utils.makeEpoch(self.splunkServer.query(query))
 
         net.update(ssh=ssh, http=http)
@@ -46,14 +48,15 @@ class Siem:
         """
         
         # fuzz time 
-        time = utils.fuzzTime(stime, etime, 10)
+        time = utils.fuzzTime(stime, etime, cf['host-lat'])
 
         # setup query
-        query = "index=windows EventCode=4688 Logon_ID={} host={} \
+        query = "index={} {}=4688 Logon_ID={} host={} \
                 earliest={} latest={} | sort 0 _time \
                 | table _indextime Creator_Process_Name, New_Process_Name \
                 Creator_Process_ID, New_Process_ID" \
-                .format(logonID, host, time[0], time[1])
+                .format(cf['host-index'], cf['field-event'], \
+                logonID, host, time[0], time[1])
         procs = self.splunkServer.query(query)
 
         # tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}, {'name' : 'conhostchild2.exe', 'children' : [{'name' : 'conhostchild2child.exe'}]}]}, {'name' : 'tasklist.exe'}] }]
@@ -224,11 +227,12 @@ class Siem:
         """
         
         # setup query
-        query = "index=windows {} earliest={} latest={} EventCode=4624 OR \
-                    EventCode=4634 OR EventCode=4647 | sort 0 _time \
+        query = "index={} {} earliest={} latest={} {} IN (4624, \
+                    4634, 4647) | sort 0 _time \
                     | table _indextime, Logon_Type, Account_Name \
                     Logon_ID, Linked_Logon_ID, TaskCategory, host, \
-                    Elevated_Token".format(user, stime, etime)
+                    Elevated_Token".format(cf['host-index'], user, stime, \
+                    etime, cf['field-event'])
         self.logs = self.splunkServer.query(query) 
 
         # initial logon & logoff lists
