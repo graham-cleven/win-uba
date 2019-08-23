@@ -51,14 +51,72 @@ class Siem:
                 | table _indextime Creator_Process_Name, New_Process_Name \
                 Creator_Process_ID, New_Process_ID" \
                 .format(logonID, host, time[0], time[1])
-        processes = self.splunkServer.query(query)
+        procs = self.splunkServer.query(query)
 
-        tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}, {'name' : 'conhostchild2.exe', 'children' : [{'name' : 'conhostchild2child.exe'}]}]}, {'name' : 'tasklist.exe'}] }]
+        # tree = [{'parent' : {'name' : 'cmd.exe'}, 'children' : [{'name' : 'conhost.exe', 'children' : [{'name': 'conhostchild.exe'}, {'name' : 'conhostchild2.exe', 'children' : [{'name' : 'conhostchild2child.exe'}]}]}, {'name' : 'tasklist.exe'}] }]
+
+        # generic find child funciton
+        def findChild(procs, Creator_Process_ID):
+            children = []
+            for proc in procs:
+                if proc['Creator_Process_ID'] == Creator_Process_ID:
+                    child = {'name' : proc['New_Process_Name'],\
+                            'New_Process_ID' : proc['New_Process_ID'],\
+                            'children' : [{}]}
+                    children.append(child)
+            if len(children) > 0:
+                return children
+            else:
+                return 0
+
+        # get list of PPIDS
+        ppids = set() 
+        for proc in procs:
+            ppids.add(proc['Creator_Process_ID'])
+        
+        # parents list contains top level PPIDs (0x8c in test db)
+        # parents = ['0x2b4', '0x220', '0x2e8', '0x1e30', '0x398', '0x3d4'] 
+        parents = []
+        for ppid in ppids:
+            parentFlag = True
+            for proc in procs:
+                if proc['New_Process_ID'] == ppid:
+                    parentFlag = False
+            if parentFlag == True:
+                parents.append(ppid)
+
+        # return procs[3]
+
+        # populate parents list 
+        parentsMeta = []
+        for parent in parents:
+            for proc in procs:
+                if proc['Creator_Process_ID'] == parent:
+                    parentObj = {'parent' : {'name' : proc['New_Process_Name'], \
+                            'New_Process_ID' : proc['New_Process_ID']}}
+                    parentsMeta.append(parentObj)
+
+        # child l1  
+        for parent in parentsMeta:
+            child = findChild(procs, parent['parent']['New_Process_ID']) 
+            if child:
+                parent.update(children=child)
+
+                # l2 
+                for child in parent['children']:
+                    cchild = findChild(procs, child['New_Process_ID'])
+                    if cchild:
+                        child.update(children=cchild)
+
+                        # l3
+                        for cchild in child['children']:
+                            ccchild = findChild(procs, cchild['New_Process_ID'])
+                            if ccchild:
+                                cchild.update(children=ccchild)
 
 
-
-        return tree
-
+        return parentsMeta
+        """
         tree = []
         for proc in processes:
             branch = []
@@ -84,6 +142,7 @@ class Siem:
             tree.append(branch)
 
         return tree[0]
+        """
 
         """
         # procTree = [ {'parent' : {'time' : '1234', 'name' : 'Name'}, 'children' : [{'time' : '1234', 'name' : 'child'}]} ]
@@ -169,9 +228,11 @@ class Siem:
                     Elevated_Token".format(user, stime, etime)
         self.logs = self.splunkServer.query(query) 
 
-        # initial logon & logoff objects
+        # initial logon & logoff lists
         logonObjs = []
         logoffObjs = [] 
+
+        return self.logs
 
         # create master list of logons and logoffs
         for log in self.logs:
