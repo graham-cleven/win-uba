@@ -12,29 +12,31 @@ class Siem:
         Function corrorlates network activity to 
         logon session by host & time
         """
+        net = {}
 
-        # setup query for DHCP correlation
+        # query for DHCP correlation
         query = "index=bro sourcetype=dhcp hostname={} | head 1 \
                 | table IP".format(hostname)
-
-        # execute query / grab IP addr
         IP = self.splunkServer.query(query)[0]['IP']
 
         # fuzz time
         time = utils.fuzzTime(stime, etime, 20)
 
-        # setup query against network data
+        # inbound SSH
         query = "index=bro dest_ip={} sourcetype=bro_ssh \
-                earliest={} latest={} \
+                earliest={} latest={} | sort 0 _time \
                 | table  _indextime, src_ip".format(IP, time[0], time[1]) 
-        net = self.splunkServer.query(query)
+        ssh = utils.makeEpoch(self.splunkServer.query(query))
 
-        # process time stamps
-        for n in net:
-            n['_indextime'] = datetime.fromtimestamp(float(n['_indextime'])) \
-                    .strftime("%d %b %y %H:%M:%S")
+        # outgoing http
+        query = "index=bro src_ip={} sourcetype=bro_http \
+                earliest={} latest={} | sort 0 _time \
+                | table _indextime, dest_ip".format(IP, time[0], time[1])
+        http = utils.makeEpoch(self.splunkServer.query(query))
 
-        return(net)
+        net.update(ssh=ssh, http=http)
+
+        return net
 
     def getProcess(self, logonID, host, stime, etime):
         """
@@ -47,7 +49,7 @@ class Siem:
 
         # setup query
         query = "index=windows EventCode=4688 Logon_ID={} host={} \
-                earliest={} latest={} \
+                earliest={} latest={} | sort 0 _time \
                 | table _indextime Creator_Process_Name, New_Process_Name \
                 Creator_Process_ID, New_Process_ID" \
                 .format(logonID, host, time[0], time[1])
@@ -222,7 +224,7 @@ class Siem:
         
         # setup query
         query = "index=windows {} earliest={} latest={} EventCode=4624 OR \
-                    EventCode=4634 OR EventCode=4647 \
+                    EventCode=4634 OR EventCode=4647 | sort 0 _time \
                     | table _indextime, Logon_Type, Account_Name \
                     Logon_ID, Linked_Logon_ID, TaskCategory, host, \
                     Elevated_Token".format(user, stime, etime)
@@ -231,8 +233,6 @@ class Siem:
         # initial logon & logoff lists
         logonObjs = []
         logoffObjs = [] 
-
-        return self.logs
 
         # create master list of logons and logoffs
         for log in self.logs:

@@ -14,45 +14,70 @@
 
 
 <body>
-
 	<div class="container">
     <h2>Network Analysis</h2>
    <div class="row">
-
       <div class="col-md-12 col-lg-12">
+
+
+	      {% if net.ssh|length > 0 %}
          <div id="tracking-pre"></div>
          <div id="tracking">
             <div class="text-center tracking-status-intransit">
                <p class="tracking-status text-tight">Inbound SSH</p>
             </div>
             <div class="tracking-list">
-
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Time</th>
-      <th scope="col">Source Address</th>
-    </tr>
-  </thead>
-  <tbody>
-
-    {% for n in net %}
-    <tr>
+	<table class="table">
+	  <thead>
+	    <tr>
+	      <th scope="col">Time</th>
+	      <th scope="col">Source Address</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    {% for n in net.ssh %}
+	    <tr>
 	    <td>{{ n._indextime }}</td>
 	    <td>{{ n.src_ip }}</td>
-    </tr>
-    {% endfor %}
-
-
-  </tbody>
-</table>
-
+	    </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
 	    </div>
-
 	 </div>
+	 {% endif %}
+
+		{% if net.http|length > 0 %}
+         <div id="tracking-pre"></div>
+         <div id="tracking">
+            <div class="text-center tracking-status-intransit">
+               <p class="tracking-status text-tight">Outgoing HTTP</p>
+            </div>
+            <div class="tracking-list">
+	<table class="table">
+	  <thead>
+	    <tr>
+	      <th scope="col">Time</th>
+	      <th scope="col">Destination Address</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    {% for n in net.http %}
+	    <tr>
+	    <td>{{ n._indextime }}</td>
+	    <td>{{ n.dest_ip }}</td>
+	    </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+	    </div>
+	 </div>
+	 {% endif %}
+
+
       </div>
    </div>
-	</div>
+</div>
 
 </body>
 
