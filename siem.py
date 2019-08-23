@@ -140,7 +140,7 @@ class Siem:
         
         # setup query
         query = "index={} {} earliest={} latest={} {} IN (4624, \
-                    4634, 4647) | sort 0 _time \
+                    4634, 4647) \
                     | table _indextime, Logon_Type, Account_Name \
                     Logon_ID, Linked_Logon_ID, TaskCategory, host, \
                     Elevated_Token".format(cf['host-index'], user, stime, \
