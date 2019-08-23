@@ -31,7 +31,8 @@ class Siem:
         # outgoing http
         query = "index=bro src_ip={} sourcetype=bro_http \
                 earliest={} latest={} | sort 0 _time \
-                | table _indextime, dest_ip".format(IP, time[0], time[1])
+                | table _indextime, dest_ip, dest_host" \
+                .format(IP, time[0], time[1])
         http = utils.makeEpoch(self.splunkServer.query(query))
 
         net.update(ssh=ssh, http=http)

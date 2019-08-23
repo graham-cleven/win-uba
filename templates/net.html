@@ -59,6 +59,7 @@
 	    <tr>
 	      <th scope="col">Time</th>
 	      <th scope="col">Destination Address</th>
+	      <th scope="col">Destination Host</th>
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -66,6 +67,7 @@
 	    <tr>
 	    <td>{{ n._indextime }}</td>
 	    <td>{{ n.dest_ip }}</td>
+	    <td>{{ n.dest_host }}</td>
 	    </tr>
 	    {% endfor %}
 	  </tbody>
