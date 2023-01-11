@@ -4,58 +4,66 @@ from anytree import Node, RenderTree
 splunkServer = Splunk()
 
 logonID = "0x5CFE8F3"
-host = "DESKTOP-IUAO9R7" 
-time = ['1566081929', '1566081981']
+host = "DESKTOP-IUAO9R7"
+time = ["1566081929", "1566081981"]
 
 query = "index=windows EventCode=4688 Logon_ID={} host={} \
         earliest={} latest={} | table _indextime \
         Creator_Process_Name, New_Process_Name \
-        Creator_Process_ID, New_Process_ID"\
-        .format(logonID, host, time[0], time[1])
+        Creator_Process_ID, New_Process_ID".format(
+    logonID, host, time[0], time[1]
+)
 procs = splunkServer.query(query)
 
- # generic find child funciton
+# generic find child funciton
 def findChild(procs, creator_Process_ID):
     children = []
     for proc in procs:
-        if proc['Creator_Process_ID'] == creator_Process_ID:
-            child = {'name' : proc['New_Process_Name'],\
-                    'New_Process_ID' : proc['New_Process_ID'],\
-                    'children' : [{}]}
+        if proc["Creator_Process_ID"] == creator_Process_ID:
+            child = {
+                "name": proc["New_Process_Name"],
+                "New_Process_ID": proc["New_Process_ID"],
+                "children": [{}],
+            }
             children.append(child)
     if len(children) > 0:
         return children
     else:
         return 0
 
+
 # get list of PPIDS
-ppids = set() 
+ppids = set()
 for proc in procs:
-    ppids.add(proc['Creator_Process_ID'])
+    ppids.add(proc["Creator_Process_ID"])
 
 # parents list contains top level PPIDs (0x8c in test db)
 parents = []
 for ppid in ppids:
     parentFlag = True
     for proc in procs:
-        if proc['New_Process_ID'] == ppid:
+        if proc["New_Process_ID"] == ppid:
             parentFlag = False
     if parentFlag == True:
         parents.append(ppid)
 
-# populate parents list 
+# populate parents list
 parentsMeta = []
 for parent in parents:
     for proc in procs:
-        if proc['Creator_Process_ID'] == parent:
-            parent = {'parent' : {'name' : proc['New_Process_Name'], \
-                    'New_Process_ID' : proc['New_Process_ID']}}
+        if proc["Creator_Process_ID"] == parent:
+            parent = {
+                "parent": {
+                    "name": proc["New_Process_Name"],
+                    "New_Process_ID": proc["New_Process_ID"],
+                }
+            }
             parentsMeta.append(parent)
 
-p1 = Node(parentsMeta[0]['parent']['New_Process_ID'])
+p1 = Node(parentsMeta[0]["parent"]["New_Process_ID"])
 
 for proc in procs:
-    Node(proc['New_Process_ID'], parent=proc['Creator_Process_ID'])
+    Node(proc["New_Process_ID"], parent=proc["Creator_Process_ID"])
 
 for pre, fill, node in RenderTree(p1):
     print("%s%s" % (pre, node.name))

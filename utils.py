@@ -8,7 +8,9 @@ def fuzzTime(stime, etime, fuzzFactor):
 
 def makeEpoch(d):
     from datetime import datetime
+
     for n in d:
-        n['_indextime'] = datetime.fromtimestamp(float(n['_indextime'])) \
-                .strftime("%d %b %y %H:%M:%S")
+        n["_indextime"] = datetime.fromtimestamp(float(n["_indextime"])).strftime(
+            "%d %b %y %H:%M:%S"
+        )
     return d
